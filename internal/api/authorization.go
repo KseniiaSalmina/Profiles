@@ -22,7 +22,7 @@ func (s *Server) authorization(r *http.Request) (bool, error) {
 		return false, err
 	}
 
-	if err := validation.User(username, password, *user); err != nil {
+	if err := validation.User(username, password+s.storage.ReturnSalt(), *user); err != nil {
 		return false, err
 	}
 

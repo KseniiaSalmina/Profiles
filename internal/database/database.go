@@ -1,40 +1,72 @@
 package database
 
 import (
+	"fmt"
 	"sync"
 
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
+	"github.com/KseniiaSalmina/Profiles/internal/config"
 )
 
 type Database struct {
 	mutex           sync.RWMutex
 	users           map[string]models.User
 	uniqueUsernames map[string]string
+	salt            string
 }
 
-func NewDatabase() *Database {
-	return &Database{
+func NewDatabase(cfg config.Database) (*Database, error) {
+	d := Database{
 		users:           make(map[string]models.User),
 		uniqueUsernames: make(map[string]string),
+		salt:            cfg.Salt,
 	}
+
+	firstUser := models.User{
+		Email:    cfg.AdminEmail,
+		Username: cfg.AdminUsername,
+		Password: cfg.AdminPassword,
+		Admin:    true,
+	}
+
+	if _, err := d.AddUser(firstUser); err != nil {
+		return nil, fmt.Errorf("failed to create database: %w", err)
+	}
+
+	return &d, nil
 }
 
-func (db *Database) AddUser(user models.User) error {
+func (db *Database) ReturnSalt() string {
+	return db.salt
+}
+
+func (db *Database) AddUser(user models.User) (string, error) {
 	db.mutex.Lock()
 	defer db.mutex.Unlock()
 
 	if _, ok := db.users[user.ID]; ok {
-		return ErrUserAlreadyExist
+		return "", ErrUserAlreadyExist
 	}
 
 	if _, ok := db.uniqueUsernames[user.Username]; ok {
-		return ErrNotUniqueUsername
+		return "", ErrNotUniqueUsername
 	}
+
+	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password+db.salt), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("failed to create user: %w", err)
+	}
+
+	user.Password = string(hashPass)
+	user.ID = uuid.NewString()
 
 	db.uniqueUsernames[user.Username] = user.ID
 	db.users[user.ID] = user
 
-	return nil
+	return user.ID, nil
 }
 
 func (db *Database) GetAllUsers() []models.User {
@@ -79,11 +111,11 @@ func (db *Database) GetUserByUsername(username string) (*models.User, error) {
 	return &user, nil
 }
 
-func (db *Database) ChangeUser(id string, user models.User) error {
+func (db *Database) ChangeUser(user models.User) error {
 	db.mutex.Lock()
 	defer db.mutex.Unlock()
 
-	oldUser, ok := db.users[id]
+	oldUser, ok := db.users[user.ID]
 	if !ok {
 		return ErrUserDoesNotExist
 	}
@@ -94,10 +126,17 @@ func (db *Database) ChangeUser(id string, user models.User) error {
 		}
 
 		delete(db.uniqueUsernames, oldUser.Username)
+		db.uniqueUsernames[user.Username] = user.ID
 	}
 
-	db.uniqueUsernames[user.Username] = user.ID
-	db.users[id] = user
+	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password+db.salt), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+
+	user.Password = string(hashPass)
+
+	db.users[user.ID] = user
 
 	return nil
 }

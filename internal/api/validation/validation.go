@@ -3,8 +3,9 @@ package validation
 import (
 	"encoding/base64"
 	"fmt"
-	"hash/crc64"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
 )
@@ -29,21 +30,12 @@ func AuthString(auth string) (string, string, error) {
 }
 
 func User(username, password string, user models.User) error {
-	passwordHash := crc64.Checksum([]byte(password), crc64.MakeTable(crc64.ISO))
-	if username != user.Username || passwordHash != user.Password {
-		return ErrIncorrectPassword
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return ErrIncorrectUserData
 	}
 
-	return nil
-}
-
-func Admin(username, password string, user models.User) error {
-	if err := User(username, password, user); err != nil {
-		return fmt.Errorf("failed to check admin status: %w", err)
-	}
-
-	if !user.Admin {
-		return ErrIsNotAdmin
+	if username != user.Username {
+		return ErrIncorrectUserData
 	}
 
 	return nil
