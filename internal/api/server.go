@@ -10,11 +10,12 @@ import (
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
 	"github.com/KseniiaSalmina/Profiles/internal/config"
+	"github.com/KseniiaSalmina/Profiles/internal/database"
 )
 
 type Storage interface {
 	ReturnSalt() string
-	GetAuthData(username string) (string, bool, error)
+	GetAuthData(username string) (*database.User, error)
 	GetAllUsers(offset, limit int) *models.PageUsers
 	AddUser(user models.UserRequest) (string, error)
 	GetUserByID(id string) (*models.UserResponse, error)

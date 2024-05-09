@@ -36,7 +36,7 @@ func (s *Server) getPageInfo(r *http.Request) (int, int, error) {
 	pageNoStr := r.FormValue("page")
 	switch pageNoStr {
 	case "":
-		pageNo = 1
+		pageNo = defaultPage
 	default:
 		p, err := strconv.Atoi(pageNoStr)
 		if err != nil {

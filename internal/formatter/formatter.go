@@ -36,13 +36,13 @@ func (f *Formatter) ReturnSalt() string {
 	return f.salt
 }
 
-func (f *Formatter) GetPasswordHashByUsername(username string) (string, error) {
+func (f *Formatter) GetAuthData(username string) (*database.User, error) {
 	user, err := f.storage.GetUserByUsername(username)
 	if err != nil {
-		return "", fmt.Errorf("failed to get auth data: %w", err)
+		return nil, fmt.Errorf("failed to get auth data: %w", err)
 	}
 
-	return user.PassHash, nil
+	return user, nil
 }
 
 func (f *Formatter) GetAllUsers(offset, limit int) *models.PageUsers {
