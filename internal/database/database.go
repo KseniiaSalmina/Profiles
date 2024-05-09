@@ -14,7 +14,6 @@ type Database struct {
 	users       []*User
 	idIDX       map[string]*User
 	usernameIDX map[string]*User
-	deleteIDX   map[string]int
 }
 
 func NewDatabase(cfg config.Database, salt string) (*Database, error) {
@@ -58,7 +57,6 @@ func (db *Database) AddUser(user User) error {
 	db.idIDX[user.ID] = &user
 	db.usernameIDX[user.Username] = &user
 	db.users = append(db.users, &user)
-	db.deleteIDX[user.ID] = len(db.users) - 1
 
 	return nil
 }
@@ -135,13 +133,21 @@ func (db *Database) DeleteUser(id string) error {
 	db.mutex.Lock()
 	defer db.mutex.Unlock()
 
-	index, ok := db.deleteIDX[id]
+	user, ok := db.idIDX[id]
 	if !ok {
 		return ErrUserDoesNotExist
 	}
 
-	db.users = append(db.users[:index], db.users[index+1:]...)
-	db.users[len(db.users)-1] = nil
+	delete(db.idIDX, user.ID)
+	delete(db.usernameIDX, user.Username)
+
+	for i, v := range db.users {
+		if v.ID == user.ID {
+			db.users = append(db.users[:i], db.users[i+1:]...)
+			db.users = db.users[:len(db.users)+1]
+			break
+		}
+	}
 
 	return nil
 }
