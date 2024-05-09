@@ -47,7 +47,7 @@ func (a *Application) bootstrap() error {
 }
 
 func (a *Application) initDatabase() error {
-	db, err := database.NewDatabase(a.cfg.Database)
+	db, err := database.NewDatabase(a.cfg.Database, a.cfg.Formatter.Salt)
 	if err != nil {
 		return err
 	}
