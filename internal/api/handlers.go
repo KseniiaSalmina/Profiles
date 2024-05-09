@@ -21,7 +21,13 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users := s.storage.GetAllUsers()
+	limit, pageNo, err := s.getPageInfo(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	users := s.storage.GetAllUsers(limit*pageNo, limit)
 
 	_ = json.NewEncoder(w).Encode(users)
 }
@@ -42,7 +48,7 @@ func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.User
+	var user models.UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -99,7 +105,7 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.User
+	var user models.UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

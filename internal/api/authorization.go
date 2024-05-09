@@ -17,7 +17,7 @@ func (s *Server) authorization(r *http.Request) (bool, error) {
 		return false, err
 	}
 
-	user, err := s.storage.GetUserByUsername(username)
+	user, err := s.storage.GetAuthData(username)
 	if err != nil {
 		return false, err
 	}

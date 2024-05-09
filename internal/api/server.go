@@ -14,11 +14,11 @@ import (
 
 type Storage interface {
 	ReturnSalt() string
-	GetUserByUsername(username string) (*models.User, error)
-	GetAllUsers() []models.User
-	AddUser(user models.User) (string, error)
-	GetUserByID(id string) (*models.User, error)
-	ChangeUser(user models.User) error
+	GetAuthData(username string) (string, bool, error)
+	GetAllUsers(offset, limit int) *models.PageUsers
+	AddUser(user models.UserRequest) (string, error)
+	GetUserByID(id string) (*models.UserResponse, error)
+	ChangeUser(user models.UserRequest) error
 	DeleteUser(id string) error
 }
 

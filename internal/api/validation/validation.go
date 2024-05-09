@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/KseniiaSalmina/Profiles/internal/api/models"
+	"github.com/KseniiaSalmina/Profiles/internal/database"
 )
 
 func AuthString(auth string) (string, string, error) {
@@ -29,8 +29,8 @@ func AuthString(auth string) (string, string, error) {
 	return authData[0], authData[1], nil
 }
 
-func User(username, password string, user models.User) error {
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+func User(username, password string, user database.User) error {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PassHash), []byte(password)); err != nil {
 		return ErrIncorrectUserData
 	}
 
