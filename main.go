@@ -19,6 +19,11 @@ func init() {
 	}
 }
 
+// @title Profiles management API
+// @version 1.0.0
+// @description API to manage users profiles
+// @host localhost:8080
+// @BasePath /
 func main() {
 	application, err := app.NewApplication(cfg)
 	if err != nil {
