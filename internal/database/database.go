@@ -143,8 +143,10 @@ func (db *Database) DeleteUser(id string) error {
 
 	for i, v := range db.users {
 		if v.ID == user.ID {
-			db.users = append(db.users[:i], db.users[i+1:]...)
-			db.users = db.users[:len(db.users)+1]
+			if i != len(db.users)-1 {
+				db.users = append(db.users[:i], db.users[i+1:]...)
+			}
+			db.users = db.users[:len(db.users)-1]
 			break
 		}
 	}
