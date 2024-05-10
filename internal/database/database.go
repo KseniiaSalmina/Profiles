@@ -7,6 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/KseniiaSalmina/Profiles/internal/config"
+	"github.com/google/uuid"
 )
 
 type Database struct {
@@ -29,6 +30,7 @@ func NewDatabase(cfg config.Database, salt string) (*Database, error) {
 	}
 
 	firstUser := User{
+		ID:       uuid.NewString(),
 		Email:    cfg.AdminEmail,
 		Username: cfg.AdminUsername,
 		PassHash: string(hashPass),

@@ -66,7 +66,7 @@ func (f *Formatter) GetAllUsers(offset, limit int) *models.PageUsers {
 
 	return &models.PageUsers{
 		Users:       users,
-		PageNo:      offset / limit,
+		PageNo:      offset/limit + 1,
 		Limit:       limit,
 		PagesAmount: pagesAmount,
 	}
