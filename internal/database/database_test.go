@@ -1,6 +1,7 @@
 package database
 
 import (
+	"log"
 	"testing"
 
 	"github.com/KseniiaSalmina/Profiles/internal/config"
@@ -31,6 +32,23 @@ var testUsers = []User{
 		Username: "testUser3",
 		PassHash: "super hash3",
 		Admin:    false},
+}
+
+func prepareDB(isFull bool) *Database {
+	db, err := NewDatabase(cfg, "test")
+	if err != nil {
+		log.Fatalf("failed to create db: %s", err.Error())
+	}
+	if isFull {
+		for _, user := range testUsers {
+			err = db.AddUser(user)
+			if err != nil {
+				log.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
+			}
+		}
+	}
+
+	return db
 }
 
 func TestDatabase_AddUser(t1 *testing.T) {
@@ -69,10 +87,7 @@ func TestDatabase_AddUser(t1 *testing.T) {
 		}}, want: res{wantErr: true, error: ErrNotUniqueUsername}},
 	}
 
-	db, err := NewDatabase(cfg, "test")
-	if err != nil {
-		t1.Fatalf("failed to create db: %s", err.Error())
-	}
+	db := prepareDB(false)
 
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -108,16 +123,7 @@ func TestDatabase_GetAllUsers(t1 *testing.T) {
 		{name: "offset+limit is more than len of slice of users in db", args: args{offset: 1, limit: 5}, want: res{testUsers}},
 	}
 
-	db, err := NewDatabase(cfg, "test")
-	if err != nil {
-		t1.Fatalf("failed to create db: %s", err.Error())
-	}
-	for _, user := range testUsers {
-		err = db.AddUser(user)
-		if err != nil {
-			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
-		}
-	}
+	db := prepareDB(true)
 
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -145,16 +151,7 @@ func TestDatabase_GetUserByID(t1 *testing.T) {
 		{name: "user does not exist", args: args{userID: "10"}, want: res{wantErr: true, err: ErrUserDoesNotExist}},
 	}
 
-	db, err := NewDatabase(cfg, "test")
-	if err != nil {
-		t1.Fatalf("failed to create db: %s", err.Error())
-	}
-	for _, user := range testUsers {
-		err = db.AddUser(user)
-		if err != nil {
-			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
-		}
-	}
+	db := prepareDB(true)
 
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -187,16 +184,7 @@ func TestDatabase_GetUserByUsername(t1 *testing.T) {
 		{name: "user does not exist", args: args{username: "superUser2000"}, want: res{wantErr: true, err: ErrUserDoesNotExist}},
 	}
 
-	db, err := NewDatabase(cfg, "test")
-	if err != nil {
-		t1.Fatalf("failed to create db: %s", err.Error())
-	}
-	for _, user := range testUsers {
-		err = db.AddUser(user)
-		if err != nil {
-			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
-		}
-	}
+	db := prepareDB(true)
 
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -254,16 +242,7 @@ func TestDatabase_ChangeUser(t1 *testing.T) {
 		}}, want: res{wantErr: true, err: ErrUserDoesNotExist}},
 	}
 
-	db, err := NewDatabase(cfg, "test")
-	if err != nil {
-		t1.Fatalf("failed to create db: %s", err.Error())
-	}
-	for _, user := range testUsers {
-		err = db.AddUser(user)
-		if err != nil {
-			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
-		}
-	}
+	db := prepareDB(true)
 
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -295,16 +274,7 @@ func TestDatabase_DeleteUser(t1 *testing.T) {
 		{name: "user does not exist", args: args{userID: "25"}, want: res{wantErr: true, err: ErrUserDoesNotExist}},
 	}
 
-	db, err := NewDatabase(cfg, "test")
-	if err != nil {
-		t1.Fatalf("failed to create db: %s", err.Error())
-	}
-	for _, user := range testUsers {
-		err = db.AddUser(user)
-		if err != nil {
-			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
-		}
-	}
+	db := prepareDB(true)
 
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
