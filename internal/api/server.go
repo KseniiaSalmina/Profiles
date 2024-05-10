@@ -35,7 +35,7 @@ func NewServer(cfg config.Server, storage Storage) *Server {
 	router.GET("/user", s.getAllUsers)
 	router.POST("/user", s.postUser)
 	router.GET("/user/:id", s.getUser)
-	router.PATCH("/user/:id", s.patchUser)
+	router.PUT("/user/:id", s.putUser)
 	router.DELETE("/user/:id", s.deleteUser)
 
 	//swagHandler := httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json"))

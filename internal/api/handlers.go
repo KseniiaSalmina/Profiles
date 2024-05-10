@@ -2,9 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/uptrace/bunrouter"
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
@@ -13,11 +13,7 @@ import (
 
 func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 	if _, err := s.authorization(r); err != nil {
-		if errors.Is(err, ErrNoAuthString) {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
@@ -35,11 +31,7 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 	isAdmin, err := s.authorization(r)
 	if err != nil {
-		if errors.Is(err, ErrNoAuthString) {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
@@ -65,17 +57,19 @@ func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	if _, err := s.authorization(r); err != nil {
-		if errors.Is(err, ErrNoAuthString) {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	id, ok := bunrouter.ParamsFromContext(r.Context()).Get("id")
 	if !ok {
 		http.Error(w, "id is required", http.StatusBadRequest)
+		return
+	}
+
+	_, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "id should be in uuid format", http.StatusBadRequest)
 		return
 	}
 
@@ -89,14 +83,10 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) putUser(w http.ResponseWriter, r *http.Request) {
 	isAdmin, err := s.authorization(r)
 	if err != nil {
-		if errors.Is(err, ErrNoAuthString) {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
@@ -108,6 +98,12 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 	var user models.UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = uuid.Parse(user.ID)
+	if err != nil {
+		http.Error(w, "id should be in uuid format", http.StatusBadRequest)
 		return
 	}
 
@@ -123,11 +119,7 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	isAdmin, err := s.authorization(r)
 	if err != nil {
-		if errors.Is(err, ErrNoAuthString) {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
@@ -139,6 +131,12 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	id, ok := bunrouter.ParamsFromContext(r.Context()).Get("id")
 	if !ok {
 		http.Error(w, "id is required", http.StatusBadRequest)
+		return
+	}
+
+	_, err = uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "id should be in uuid format", http.StatusBadRequest)
 		return
 	}
 

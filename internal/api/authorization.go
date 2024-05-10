@@ -10,14 +10,9 @@ import (
 var ErrNoAuthString = errors.New("authorization required")
 
 func (s *Server) authorization(r *http.Request) (bool, error) {
-	authString, ok := r.Header["Authorization"]
+	username, password, ok := r.BasicAuth()
 	if !ok {
 		return false, ErrNoAuthString
-	}
-
-	username, password, err := validation.AuthString(authString[0])
-	if err != nil {
-		return false, err
 	}
 
 	user, err := s.storage.GetAuthData(username)
