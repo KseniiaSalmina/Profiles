@@ -16,7 +16,7 @@ func AuthString(auth string) (string, string, error) {
 		return "", "", ErrIncorrectAuth
 	}
 
-	info, err := base64.RawStdEncoding.DecodeString(base64Info)
+	info, err := base64.StdEncoding.DecodeString(base64Info)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to decode authorization string: %w", err)
 	}
