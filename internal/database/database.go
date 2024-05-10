@@ -65,10 +65,23 @@ func (db *Database) GetAllUsers(offset, limit int) []User {
 	db.mutex.RLock()
 	defer db.mutex.RUnlock()
 
+	if offset > len(db.users)-1 {
+		return []User{}
+	}
+
 	result := make([]User, 0, limit)
 
-	for _, user := range db.users[offset+1 : offset+limit+1] {
-		result = append(result, *user)
+	from := offset
+	to := offset + limit
+
+	if to > len(db.users)-1 {
+		for _, user := range db.users[from:] {
+			result = append(result, *user)
+		}
+	} else {
+		for _, user := range db.users[from:to] {
+			result = append(result, *user)
+		}
 	}
 
 	return result
