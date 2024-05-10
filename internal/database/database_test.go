@@ -1,0 +1,324 @@
+package database
+
+import (
+	"testing"
+
+	"github.com/KseniiaSalmina/Profiles/internal/config"
+	"github.com/stretchr/testify/assert"
+)
+
+var cfg = config.Database{
+	AdminUsername: "test admin",
+	AdminPassword: "test pass",
+	AdminEmail:    "test@email",
+}
+var testUsers = []User{
+	{
+		ID:       "1",
+		Email:    "test@email.com",
+		Username: "testUser",
+		PassHash: "super hash",
+		Admin:    false},
+	{
+		ID:       "2",
+		Email:    "test2@email.com",
+		Username: "testUser2",
+		PassHash: "super hash2",
+		Admin:    false},
+	{
+		ID:       "3",
+		Email:    "test3@email.com",
+		Username: "testUser3",
+		PassHash: "super hash3",
+		Admin:    false},
+}
+
+func TestDatabase_AddUser(t1 *testing.T) {
+	type args struct {
+		user User
+	}
+	type res struct {
+		wantErr bool
+		error   error
+	}
+	tests := []struct {
+		name string
+		args args
+		want res
+	}{
+		{name: "standard case", args: args{user: User{
+			ID:       "1",
+			Email:    "test@email.com",
+			Username: "testUser",
+			PassHash: "super hash",
+			Admin:    true,
+		}}, want: res{wantErr: false, error: nil}},
+		{name: "repeating ID", args: args{user: User{
+			ID:       "1",
+			Email:    "test2@email.com",
+			Username: "test2User",
+			PassHash: "super hash2",
+			Admin:    true,
+		}}, want: res{wantErr: true, error: ErrUserAlreadyExist}},
+		{name: "repeating username", args: args{user: User{
+			ID:       "3",
+			Email:    "test3@email.com",
+			Username: "testUser",
+			PassHash: "super hash3",
+			Admin:    true,
+		}}, want: res{wantErr: true, error: ErrNotUniqueUsername}},
+	}
+
+	db, err := NewDatabase(cfg, "test")
+	if err != nil {
+		t1.Fatalf("failed to create db: %s", err.Error())
+	}
+
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			err := db.AddUser(tt.args.user)
+			if !tt.want.wantErr {
+				assert.NoError(t1, err)
+				assert.Equal(t1, &tt.args.user, db.idIDX[tt.args.user.ID])
+				assert.Equal(t1, &tt.args.user, db.usernameIDX[tt.args.user.Username])
+				assert.Equal(t1, &tt.args.user, db.users[1]) //TODO: change if add new test cases
+			}
+			assert.Equal(t1, tt.want.error, err)
+		})
+	}
+}
+
+func TestDatabase_GetAllUsers(t1 *testing.T) {
+	type args struct {
+		offset int
+		limit  int
+	}
+	type res struct {
+		users []User
+	}
+	tests := []struct {
+		name string
+		args args
+		want res
+	}{
+		{name: "standard case", args: args{offset: 1, limit: 2}, want: res{testUsers[0:2]}},
+		{name: "only one user in result", args: args{offset: 1, limit: 1}, want: res{testUsers[0:1]}},
+		{name: "offset more than amount of users in db", args: args{offset: 5, limit: 2}, want: res{[]User{}}},
+		{name: "offset is equal to amount of users in db", args: args{offset: 4, limit: 2}, want: res{[]User{}}},
+		{name: "offset+limit is more than len of slice of users in db", args: args{offset: 1, limit: 5}, want: res{testUsers}},
+	}
+
+	db, err := NewDatabase(cfg, "test")
+	if err != nil {
+		t1.Fatalf("failed to create db: %s", err.Error())
+	}
+	for _, user := range testUsers {
+		err = db.AddUser(user)
+		if err != nil {
+			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
+		}
+	}
+
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			users := db.GetAllUsers(tt.args.offset, tt.args.limit)
+			assert.Equal(t1, tt.want.users, users)
+		})
+	}
+}
+
+func TestDatabase_GetUserByID(t1 *testing.T) {
+	type args struct {
+		userID string
+	}
+	type res struct {
+		user    User
+		wantErr bool
+		err     error
+	}
+	tests := []struct {
+		name string
+		args args
+		want res
+	}{
+		{name: "standard case", args: args{userID: "1"}, want: res{user: testUsers[0], wantErr: false, err: nil}},
+		{name: "user does not exist", args: args{userID: "10"}, want: res{wantErr: true, err: ErrUserDoesNotExist}},
+	}
+
+	db, err := NewDatabase(cfg, "test")
+	if err != nil {
+		t1.Fatalf("failed to create db: %s", err.Error())
+	}
+	for _, user := range testUsers {
+		err = db.AddUser(user)
+		if err != nil {
+			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
+		}
+	}
+
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			user, err := db.GetUserByID(tt.args.userID)
+			if tt.want.wantErr {
+				assert.Equal(t1, tt.want.err, err)
+			} else {
+				assert.NoError(t1, err)
+				assert.Equal(t1, tt.want.user, *user)
+			}
+		})
+	}
+}
+
+func TestDatabase_GetUserByUsername(t1 *testing.T) {
+	type args struct {
+		username string
+	}
+	type res struct {
+		user    User
+		wantErr bool
+		err     error
+	}
+	tests := []struct {
+		name string
+		args args
+		want res
+	}{
+		{name: "standard case", args: args{username: "testUser"}, want: res{user: testUsers[0], wantErr: false, err: nil}},
+		{name: "user does not exist", args: args{username: "superUser2000"}, want: res{wantErr: true, err: ErrUserDoesNotExist}},
+	}
+
+	db, err := NewDatabase(cfg, "test")
+	if err != nil {
+		t1.Fatalf("failed to create db: %s", err.Error())
+	}
+	for _, user := range testUsers {
+		err = db.AddUser(user)
+		if err != nil {
+			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
+		}
+	}
+
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			user, err := db.GetUserByUsername(tt.args.username)
+			if tt.want.wantErr {
+				assert.Equal(t1, tt.want.err, err)
+			} else {
+				assert.NoError(t1, err)
+				assert.Equal(t1, tt.want.user, *user)
+			}
+		})
+	}
+}
+
+func TestDatabase_ChangeUser(t1 *testing.T) {
+	type args struct {
+		user User
+	}
+	type res struct {
+		wantErr bool
+		err     error
+	}
+	tests := []struct {
+		name string
+		args args
+		want res
+	}{
+		{name: "standard case", args: args{user: User{
+			ID:       "1",
+			Email:    "newTest@email.com",
+			Username: "testUser",
+			PassHash: "super hash",
+			Admin:    false,
+		}}, want: res{wantErr: false, err: nil}},
+		{name: "change username", args: args{user: User{
+			ID:       "1",
+			Email:    "newTest@email.com",
+			Username: "testUser2000",
+			PassHash: "super hash",
+			Admin:    false,
+		}}, want: res{wantErr: false, err: nil}},
+		{name: "change username to already taken username", args: args{user: User{
+			ID:       "1",
+			Email:    "newTest@email.com",
+			Username: "testUser2",
+			PassHash: "super hash",
+			Admin:    false,
+		}}, want: res{wantErr: true, err: ErrNotUniqueUsername}},
+		{name: "change not existing user", args: args{user: User{
+			ID:       "1000",
+			Email:    "newTest@email.com",
+			Username: "testUser2",
+			PassHash: "super hash",
+			Admin:    false,
+		}}, want: res{wantErr: true, err: ErrUserDoesNotExist}},
+	}
+
+	db, err := NewDatabase(cfg, "test")
+	if err != nil {
+		t1.Fatalf("failed to create db: %s", err.Error())
+	}
+	for _, user := range testUsers {
+		err = db.AddUser(user)
+		if err != nil {
+			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
+		}
+	}
+
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			err := db.ChangeUser(tt.args.user)
+			if tt.want.wantErr {
+				assert.Equal(t1, tt.want.err, err)
+			} else {
+				assert.NoError(t1, err)
+				assert.Equal(t1, tt.args.user, *db.users[1]) //TODO: change if add new test cases
+			}
+		})
+	}
+}
+
+func TestDatabase_DeleteUser(t1 *testing.T) {
+	type args struct {
+		userID string
+	}
+	type res struct {
+		wantErr bool
+		err     error
+	}
+	tests := []struct {
+		name string
+		args args
+		want res
+	}{
+		{name: "standart case", args: args{userID: "1"}, want: res{wantErr: false, err: nil}},
+		{name: "user does not exist", args: args{userID: "25"}, want: res{wantErr: true, err: ErrUserDoesNotExist}},
+	}
+
+	db, err := NewDatabase(cfg, "test")
+	if err != nil {
+		t1.Fatalf("failed to create db: %s", err.Error())
+	}
+	for _, user := range testUsers {
+		err = db.AddUser(user)
+		if err != nil {
+			t1.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
+		}
+	}
+
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			err := db.DeleteUser(tt.args.userID)
+			if tt.want.wantErr {
+				assert.Equal(t1, tt.want.err, err)
+			} else {
+				assert.NoError(t1, err)
+				_, ok := db.idIDX[tt.args.userID]
+				assert.Equal(t1, false, ok)
+				_, ok = db.usernameIDX["testUser"] //TODO: change if add new test cases
+				assert.Equal(t1, false, ok)
+				assert.NotEqual(t1, testUsers[0], *db.users[1]) //TODO: change if add new test cases
+			}
+		})
+	}
+}
