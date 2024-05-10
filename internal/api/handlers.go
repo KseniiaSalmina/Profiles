@@ -13,7 +13,7 @@ import (
 
 func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 	if _, err := s.authorization(r); err != nil {
-		if errors.Is(err, validation.ErrIncorrectAuth) {
+		if errors.Is(err, ErrNoAuthString) {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -27,7 +27,7 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users := s.storage.GetAllUsers(limit*pageNo, limit)
+	users := s.storage.GetAllUsers((pageNo-1)*limit, limit)
 
 	_ = json.NewEncoder(w).Encode(users)
 }
@@ -35,7 +35,7 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 	isAdmin, err := s.authorization(r)
 	if err != nil {
-		if errors.Is(err, validation.ErrIncorrectAuth) {
+		if errors.Is(err, ErrNoAuthString) {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -65,7 +65,7 @@ func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	if _, err := s.authorization(r); err != nil {
-		if errors.Is(err, validation.ErrIncorrectAuth) {
+		if errors.Is(err, ErrNoAuthString) {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -92,7 +92,7 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 	isAdmin, err := s.authorization(r)
 	if err != nil {
-		if errors.Is(err, validation.ErrIncorrectAuth) {
+		if errors.Is(err, ErrNoAuthString) {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -123,7 +123,7 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	isAdmin, err := s.authorization(r)
 	if err != nil {
-		if errors.Is(err, validation.ErrIncorrectAuth) {
+		if errors.Is(err, ErrNoAuthString) {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}

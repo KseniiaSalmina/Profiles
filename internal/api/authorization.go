@@ -1,15 +1,18 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/validation"
 )
 
+var ErrNoAuthString = errors.New("authorization required")
+
 func (s *Server) authorization(r *http.Request) (bool, error) {
 	authString, ok := r.Header["Authorization"]
 	if !ok {
-		return false, validation.ErrIncorrectAuth
+		return false, ErrNoAuthString
 	}
 
 	username, password, err := validation.AuthString(authString[0])
