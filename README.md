@@ -58,7 +58,7 @@
 
 Переменные форматтера:
 
-   FMT_SALT=MyUniqueSalt
+    FMT_SALT=MyUniqueSalt
 
 Переменные логгера:
 
