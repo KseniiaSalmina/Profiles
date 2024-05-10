@@ -67,12 +67,8 @@ func (db *Database) GetAllUsers(offset, limit int) []User {
 
 	result := make([]User, 0, limit)
 
-	for i := offset + 1; offset <= offset+limit; offset++ {
-		if i == len(db.users) {
-			break
-		}
-
-		result = append(result, *db.users[i])
+	for _, user := range db.users[offset+1 : offset+limit+1] {
+		result = append(result, *user)
 	}
 
 	return result
