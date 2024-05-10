@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/uptrace/bunrouter"
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
@@ -39,8 +40,8 @@ func NewServer(cfg config.Server, storage Storage, logger *logrus.Logger) *Serve
 	router.PUT("/user/:id", s.putUser)
 	router.DELETE("/user/:id", s.deleteUser)
 
-	//swagHandler := httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json"))
-	//router.GET("/swagger/*path", swagHandler)
+	swagHandler := httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json"))
+	router.GET("/swagger/*path", swagHandler)
 
 	s.httpServer = &http.Server{
 		Addr:         cfg.Listen,

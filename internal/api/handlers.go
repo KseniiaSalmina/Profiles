@@ -11,6 +11,17 @@ import (
 	"github.com/KseniiaSalmina/Profiles/internal/api/validation"
 )
 
+// @Summary Get all users
+// @Security BasicAuth
+// @Tags user
+// @Description return page of users' profiles
+// @Return json
+// @Param page query int false "page number"
+// @Param limit query int false "limit of records by page"
+// @Success 200 {object} models.PageUsers
+// @Failure 400 {string} string
+// @Failure 401 {string} string
+// @Router /user [get]
 func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 	var sc int
 	defer s.logging(&sc, r)
@@ -36,6 +47,19 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(users)
 }
 
+// @Summary Post user
+// @Security BasicAuth
+// @Tags admin
+// @Description create new user
+// @Accept json
+// @Return json
+// @Param user body models.UserRequest true "new user's profile"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 401 {string} string
+// @Failure 403 {string} string
+// @Failure 500 {string} string
+// @Router /user [post]
 func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 	var sc int
 	defer s.logging(&sc, r)
@@ -75,6 +99,16 @@ func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(id)
 }
 
+// @Summary Get user by id
+// @Security BasicAuth
+// @Tags user
+// @Description return user's profile
+// @Return json
+// @Param id path string true "user's id in uuid format"
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {string} string
+// @Failure 401 {string} string
+// @Router /user/{id} [get]
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	var sc int
 	defer s.logging(&sc, r)
@@ -115,6 +149,19 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Summary Put user
+// @Security BasicAuth
+// @Tags admin
+// @Description update user's profile
+// @Accept json
+// @Param id path string true "user's id in uuid format"
+// @Param user body models.UserRequest true "updated user's profile"
+// @Success 200
+// @Failure 400 {string} string
+// @Failure 401 {string} string
+// @Failure 403 {string} string
+// @Failure 500 {string} string
+// @Router /user/{id} [put]
 func (s *Server) putUser(w http.ResponseWriter, r *http.Request) {
 	var sc int
 	defer s.logging(&sc, r)
@@ -162,6 +209,17 @@ func (s *Server) putUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Summary Delete user
+// @Security BasicAuth
+// @Tags admin
+// @Description delete user's profile
+// @Accept json
+// @Param id path string true "user's id in uuid format"
+// @Success 200
+// @Failure 400 {string} string
+// @Failure 401 {string} string
+// @Failure 403 {string} string
+// @Router /user/{id} [delete]
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	var sc int
 	defer s.logging(&sc, r)

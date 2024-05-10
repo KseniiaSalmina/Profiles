@@ -1,0 +1,212 @@
+basePath: /
+definitions:
+  models.PageUsers:
+    properties:
+      limit:
+        type: integer
+      page_number:
+        type: integer
+      pages_amount:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/models.UserResponse'
+        type: array
+    type: object
+  models.UserRequest:
+    properties:
+      admin:
+        type: boolean
+      email:
+        type: string
+      id:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: service to managment users profiles
+  title: Profiles managment API
+  version: 1.0.0
+paths:
+  /user:
+    get:
+      description: return page of users' profiles
+      parameters:
+      - description: page number
+        in: query
+        name: page
+        type: integer
+      - description: limit of records by page
+        in: query
+        name: limit
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PageUsers'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Get all users
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: create new user
+      parameters:
+      - description: new user's profile
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Post user
+      tags:
+      - admin
+  /user/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete user's profile
+      parameters:
+      - description: user's id in uuid format
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Delete user
+      tags:
+      - admin
+    get:
+      description: return user's profile
+      parameters:
+      - description: user's id in uuid format
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Get user by id
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: update user's profile
+      parameters:
+      - description: user's id in uuid format
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: updated user's profile
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserRequest'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Put user
+      tags:
+      - admin
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
