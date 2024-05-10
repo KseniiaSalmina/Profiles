@@ -1,7 +1,7 @@
 package app
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,12 +10,15 @@ import (
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
 	"github.com/KseniiaSalmina/Profiles/internal/formatter"
+	"github.com/KseniiaSalmina/Profiles/internal/logger"
+	"github.com/sirupsen/logrus"
 )
 
 type Application struct {
 	cfg       config.Application
 	db        *database.Database
 	formatter *formatter.Formatter
+	logger    *logrus.Logger
 	server    *api.Server
 	closeCh   chan os.Signal
 }
@@ -40,6 +43,9 @@ func (a *Application) bootstrap() error {
 	}
 
 	a.initFormatter()
+	if err := a.initLogger(); err != nil {
+		return err
+	}
 
 	a.initServer()
 
@@ -49,7 +55,7 @@ func (a *Application) bootstrap() error {
 func (a *Application) initDatabase() error {
 	db, err := database.NewDatabase(a.cfg.Database, a.cfg.Formatter.Salt)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to init database")
 	}
 
 	a.db = db
@@ -60,8 +66,19 @@ func (a *Application) initFormatter() {
 	a.formatter = formatter.NewFormatter(a.cfg.Formatter, a.db)
 }
 
+func (a *Application) initLogger() error {
+	l, err := logger.NewLogger(a.cfg.Logger)
+	if err != nil {
+		return fmt.Errorf("failed to init logger")
+	}
+
+	a.logger = l
+
+	return nil
+}
+
 func (a *Application) initServer() {
-	a.server = api.NewServer(a.cfg.Server, a.formatter)
+	a.server = api.NewServer(a.cfg.Server, a.formatter, a.logger)
 }
 
 func (a *Application) Run() {
@@ -74,7 +91,7 @@ func (a *Application) Run() {
 
 func (a *Application) stop() {
 	if err := a.server.Shutdown(); err != nil {
-		log.Println(err)
+		a.logger.Infof("server stopped: %s", err.Error())
 	}
 }
 

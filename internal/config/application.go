@@ -4,4 +4,5 @@ type Application struct {
 	Server
 	Database
 	Formatter
+	Logger
 }

@@ -2,10 +2,10 @@ package api
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/uptrace/bunrouter"
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
@@ -26,10 +26,11 @@ type Storage interface {
 type Server struct {
 	httpServer *http.Server
 	storage    Storage
+	logger     *logrus.Logger
 }
 
-func NewServer(cfg config.Server, storage Storage) *Server {
-	s := &Server{storage: storage}
+func NewServer(cfg config.Server, storage Storage, logger *logrus.Logger) *Server {
+	s := &Server{storage: storage, logger: logger}
 
 	router := bunrouter.New().Compat()
 	router.GET("/user", s.getAllUsers)
@@ -53,11 +54,11 @@ func NewServer(cfg config.Server, storage Storage) *Server {
 }
 
 func (s *Server) Run() {
-	log.Println("server started")
+	s.logger.Info("server started")
 
 	go func() {
 		err := s.httpServer.ListenAndServe()
-		log.Printf("server stopped: %s", err.Error())
+		s.logger.Infof("server stopped: %s", err.Error())
 	}()
 }
 

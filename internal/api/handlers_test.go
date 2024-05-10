@@ -13,6 +13,7 @@ import (
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
 	"github.com/KseniiaSalmina/Profiles/internal/formatter"
+	"github.com/KseniiaSalmina/Profiles/internal/logger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,6 +32,10 @@ var serverCfg = config.Server{
 
 var formatterCfg = config.Formatter{
 	Salt: "",
+}
+
+var loggercfg = config.Logger{
+	LogLevel: "debug",
 }
 
 var testUsers = []database.User{
@@ -72,7 +77,13 @@ func prepareDB() *database.Database {
 func prepareServer() *Server {
 	db := prepareDB()
 	formatter := formatter.NewFormatter(formatterCfg, db)
-	return NewServer(serverCfg, formatter)
+
+	logger, err := logger.NewLogger(loggercfg)
+	if err != nil {
+		log.Fatal("failed to prepare logger")
+	}
+
+	return NewServer(serverCfg, formatter, logger)
 }
 
 func TestServer_getAllUsers(t1 *testing.T) {
