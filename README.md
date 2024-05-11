@@ -68,3 +68,9 @@
     build - загружает зависимости из go.mod и собирает бинарник
     run - выполняет команду build и запускает приложение
     test - запускает все тесты
+
+## Swagger documentation
+
+Доступна по адресу:
+
+http://<host>:<port>/swagger/index.html#/
