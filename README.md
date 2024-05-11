@@ -7,7 +7,6 @@
 
 Данные о пользователях принимаются в следующем виде:
 
-    ID       string `json:"id"`
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -18,6 +17,7 @@
     ID       string `json:"id"`
 	Email    string `json:"email"`
 	Username string `json:"username"`
+	Admin    bool   `json:"admin"`
 
 При выдаче нескольких профилей сервер отдаёт страницу вида:
 
