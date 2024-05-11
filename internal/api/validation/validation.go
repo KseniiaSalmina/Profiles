@@ -27,8 +27,7 @@ func UserAdd(user models.UserAdd) error {
 		return ErrIncorrectUserData
 	}
 
-	_, err := mail.ParseAddress(user.Email)
-	if err != nil {
+	if _, err := mail.ParseAddress(user.Email); err != nil {
 		return fmt.Errorf("invalid email address: %w", err)
 	}
 
@@ -44,8 +43,7 @@ func UserUpdate(user models.UserUpdate) error {
 		if *user.Email == "" {
 			return ErrIncorrectUserData
 		}
-		_, err := mail.ParseAddress(*user.Email)
-		if err != nil {
+		if _, err := mail.ParseAddress(*user.Email); err != nil {
 			return fmt.Errorf("invalid email address: %w", err)
 		}
 	}
