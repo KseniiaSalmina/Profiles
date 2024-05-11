@@ -73,4 +73,4 @@
 
 Доступна по адресу:
 
-http://<host>:<port>/swagger/index.html#/
+http://{host}:{port}/swagger/index.html#/
