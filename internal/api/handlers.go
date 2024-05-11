@@ -176,7 +176,7 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 
 	isAdmin, err := s.authorization(r)
 	if err != nil {
-		s.logger.WithError(err).Info("put user handler, failed authorization")
+		s.logger.WithError(err).Info("patch user handler, failed authorization")
 		statusCode = http.StatusUnauthorized
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
