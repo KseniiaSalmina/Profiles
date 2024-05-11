@@ -38,7 +38,7 @@ func TestAuthData(t1 *testing.T) {
 
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-			err := AuthData(tt.args.username, tt.args.password, tt.args.user)
+			err := Auth(tt.args.username, tt.args.password, tt.args.user)
 			if !tt.want.wantErr {
 				assert.NoError(t1, err)
 			}
