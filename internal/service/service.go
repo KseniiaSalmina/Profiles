@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -11,8 +10,6 @@ import (
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
 )
-
-var ErrNoChanges = errors.New("no changes submitted")
 
 type Storage interface {
 	GetUserByUsername(username string) (*database.User, error)
@@ -117,10 +114,6 @@ func (s *Service) GetUserByID(id string) (*models.UserResponse, error) {
 }
 
 func (s *Service) ChangeUser(id string, user models.UserUpdate) error {
-	if user.Email == nil && user.Username == nil && user.Password == nil && user.Admin == nil {
-		return ErrNoChanges
-	}
-
 	dbUser := database.UserUpdate{
 		ID:       id,
 		Email:    user.Email,

@@ -21,7 +21,7 @@ import (
 var dbCfg = config.Database{
 	AdminUsername: "username",
 	AdminPassword: "password",
-	AdminEmail:    "test@email",
+	AdminEmail:    "test@email.com",
 }
 
 var serverCfg = config.Server{

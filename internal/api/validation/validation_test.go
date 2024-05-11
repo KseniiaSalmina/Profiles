@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUser(t1 *testing.T) {
+func TestAuthData(t1 *testing.T) {
 	type args struct {
 		username string
 		password string
@@ -38,7 +38,7 @@ func TestUser(t1 *testing.T) {
 
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-			err := User(tt.args.username, tt.args.password, tt.args.user)
+			err := AuthData(tt.args.username, tt.args.password, tt.args.user)
 			if !tt.want.wantErr {
 				assert.NoError(t1, err)
 			}

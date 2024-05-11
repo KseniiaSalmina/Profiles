@@ -53,7 +53,7 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 // @Description create new user
 // @Accept json
 // @Return json
-// @Param user body models.UserAdd true "new user's profile"
+// @Param user body models.UserAdd true "new user's profile, username, password and email is required"
 // @Success 200 {string} string
 // @Failure 400 {string} string
 // @Failure 401 {string} string
@@ -84,6 +84,14 @@ func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 		s.logger.WithError(err).Info("post user handler, failed unmarshall request body")
 		statusCode = http.StatusInternalServerError
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	if err := validation.UserAdd(user); err != nil {
+		s.logger.WithError(err).Info("post user handler, invalid user data")
+		statusCode = http.StatusBadRequest
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -175,7 +183,7 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !isAdmin {
-		s.logger.Info("put user handler, user is not admin")
+		s.logger.Info("patch user handler, user is not admin")
 		statusCode = http.StatusForbidden
 		http.Error(w, validation.ErrIsNotAdmin.Error(), http.StatusForbidden)
 		return
@@ -183,15 +191,23 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 
 	var user models.UserUpdate
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		s.logger.WithError(err).Info("put user handler, failed to unmarshall request body")
+		s.logger.WithError(err).Info("patch user handler, failed to unmarshall request body")
 		statusCode = http.StatusInternalServerError
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	if err := validation.UserUpdate(user); err != nil {
+		s.logger.WithError(err).Info("patch user handler, invalid user data")
+		statusCode = http.StatusBadRequest
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	id, ok := bunrouter.ParamsFromContext(r.Context()).Get("id")
 	if !ok {
-		s.logger.Info("get user handler, failed to get id")
+		s.logger.Info("patch user handler, failed to get id")
 		statusCode = http.StatusBadRequest
 		http.Error(w, "id is required", http.StatusBadRequest)
 		return
@@ -199,14 +215,14 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 
 	_, err = uuid.Parse(id)
 	if err != nil {
-		s.logger.WithError(err).Info("put user handler, failed to parse uuid")
+		s.logger.WithError(err).Info("patch user handler, failed to parse uuid")
 		statusCode = http.StatusBadRequest
 		http.Error(w, "id should be in uuid format", http.StatusBadRequest)
 		return
 	}
 
 	if err := s.service.ChangeUser(id, user); err != nil {
-		s.logger.WithError(err).Info("put user handler, failed to change user")
+		s.logger.WithError(err).Info("patch user handler, failed to change user")
 		statusCode = http.StatusBadRequest
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
