@@ -84,6 +84,10 @@ func (s *Service) GetAllUsers(limit, offset, pageNo int) *models.PageUsers {
 		pagesAmount++
 	}
 
+	if pageNo > pagesAmount {
+		pageNo = pagesAmount
+	}
+
 	return &models.PageUsers{
 		Users:       users,
 		PageNo:      pageNo,

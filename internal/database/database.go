@@ -52,6 +52,10 @@ func (db *Database) GetAllUsers(offset, limit int) []User {
 		to = len(db.users)
 	}
 
+	if from < 0 {
+		from = 0
+	}
+
 	if to > len(db.users)-1 {
 		for _, user := range db.users[from:] {
 			result = append(result, *user)
