@@ -13,13 +13,11 @@ definitions:
           $ref: '#/definitions/models.UserResponse'
         type: array
     type: object
-  models.UserRequest:
+  models.UserAdd:
     properties:
       admin:
         type: boolean
       email:
-        type: string
-      id:
         type: string
       password:
         type: string
@@ -28,9 +26,22 @@ definitions:
     type: object
   models.UserResponse:
     properties:
+      admin:
+        type: boolean
       email:
         type: string
       id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserUpdate:
+    properties:
+      admin:
+        type: boolean
+      email:
+        type: string
+      password:
         type: string
       username:
         type: string
@@ -82,7 +93,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.UserRequest'
+          $ref: '#/definitions/models.UserAdd'
       responses:
         "200":
           description: OK
@@ -166,7 +177,7 @@ paths:
       summary: Get user by id
       tags:
       - user
-    put:
+    patch:
       consumes:
       - application/json
       description: update user's profile
@@ -176,12 +187,12 @@ paths:
         name: id
         required: true
         type: string
-      - description: updated user's profile
+      - description: at least one update is required
         in: body
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.UserRequest'
+          $ref: '#/definitions/models.UserUpdate'
       responses:
         "200":
           description: OK
@@ -203,7 +214,7 @@ paths:
             type: string
       security:
       - BasicAuth: []
-      summary: Put user
+      summary: Patch user
       tags:
       - admin
 securityDefinitions:
