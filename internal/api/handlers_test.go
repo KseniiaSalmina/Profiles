@@ -9,12 +9,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
 	"github.com/KseniiaSalmina/Profiles/internal/logger"
 	"github.com/KseniiaSalmina/Profiles/internal/service"
-	"github.com/stretchr/testify/assert"
 )
 
 var dbCfg = config.Database{

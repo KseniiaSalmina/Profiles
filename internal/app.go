@@ -6,12 +6,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/KseniiaSalmina/Profiles/internal/api"
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
 	"github.com/KseniiaSalmina/Profiles/internal/logger"
 	"github.com/KseniiaSalmina/Profiles/internal/service"
-	"github.com/sirupsen/logrus"
 )
 
 type Application struct {

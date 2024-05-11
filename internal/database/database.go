@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/KseniiaSalmina/Profiles/internal/config"
-	"github.com/google/uuid"
 )
 
 type Database struct {

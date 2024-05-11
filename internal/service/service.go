@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
-	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var ErrNoChanges = errors.New("no changes submitted")
