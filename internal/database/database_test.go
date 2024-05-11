@@ -110,8 +110,7 @@ func TestDatabase_GetAllUsers(t1 *testing.T) {
 	}{
 		{name: "standard case", args: args{offset: 0, limit: 2}, want: res{testUsers[0:2]}},
 		{name: "only one user in result", args: args{offset: 1, limit: 1}, want: res{testUsers[1:2]}},
-		{name: "offset more than amount of users in db", args: args{offset: 5, limit: 2}, want: res{[]User{}}},
-		{name: "offset is equal to amount of users in db", args: args{offset: 4, limit: 2}, want: res{[]User{}}},
+		{name: "offset more than amount of users in db", args: args{offset: 5, limit: 2}, want: res{testUsers[1:]}},
 		{name: "offset+limit is more than len of slice of users in db", args: args{offset: 0, limit: 5}, want: res{testUsers}},
 	}
 
