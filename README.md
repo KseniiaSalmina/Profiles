@@ -7,9 +7,9 @@
 
 Данные о пользователях принимаются в следующем виде:
 
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Email    string `json:"email"`    //required
+	Username string `json:"username"` //required
+	Password string `json:"password"` //required
 	Admin    bool   `json:"admin"`
 
 Профили отдаются в виде:
@@ -50,15 +50,12 @@
     SERVER_WRITE_TIMEOUT=5s
     SERVER_IDLE_TIMEOUT=30s
 
-Переменные базы данных (данные первого пользователя-администратора):
+Переменные форматтера (включают в себя данные первого пользователя-администратора):
 
-    DB_USERNAME=Admin
-	DB_PASS=qwerty
-	DB_Email=qwerty@email.com
-
-Переменные форматтера:
-
-    FMT_SALT=MyUniqueSalt
+    Salt          string `env:"FMT_SALT" envDefault:"MyUniqueSalt"`
+	AdminUsername string `env:"DB_USERNAME" envDefault:"Admin"`
+	AdminPassword string `env:"DB_PASS" envDefault:"qwerty"`
+	AdminEmail    string `env:"DB_Email" envDefault:"qwerty@email.com"`
 
 Переменные логгера:
 
