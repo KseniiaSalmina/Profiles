@@ -1,4 +1,4 @@
-package formatter
+package service
 
 import (
 	"fmt"
@@ -20,24 +20,24 @@ type Storage interface {
 	DeleteUser(id string) error
 }
 
-type Formatter struct {
+type Service struct {
 	storage Storage
 	salt    string
 }
 
-func NewFormatter(cfg config.Formatter, storage Storage) *Formatter {
-	return &Formatter{
+func NewService(cfg config.Service, storage Storage) *Service {
+	return &Service{
 		storage: storage,
 		salt:    cfg.Salt,
 	}
 }
 
-func (f *Formatter) ReturnSalt() string {
-	return f.salt
+func (s *Service) ReturnSalt() string {
+	return s.salt
 }
 
-func (f *Formatter) GetAuthData(username string) (*database.User, error) {
-	user, err := f.storage.GetUserByUsername(username)
+func (s *Service) GetAuthData(username string) (*database.User, error) {
+	user, err := s.storage.GetUserByUsername(username)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get auth data: %w", err)
 	}
@@ -45,8 +45,8 @@ func (f *Formatter) GetAuthData(username string) (*database.User, error) {
 	return user, nil
 }
 
-func (f *Formatter) GetAllUsers(offset, limit int) *models.PageUsers {
-	dbUsers := f.storage.GetAllUsers(offset, limit)
+func (s *Service) GetAllUsers(limit, offset, pageNo int) *models.PageUsers {
+	dbUsers := s.storage.GetAllUsers(offset, limit)
 
 	users := make([]models.UserResponse, 0, len(dbUsers))
 	for _, user := range dbUsers {
@@ -54,11 +54,12 @@ func (f *Formatter) GetAllUsers(offset, limit int) *models.PageUsers {
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
+			Admin:    user.Admin,
 		}
 		users = append(users, u)
 	}
 
-	usersAmount := f.storage.CountUsers()
+	usersAmount := s.storage.CountUsers()
 	pagesAmount := usersAmount / limit
 	if usersAmount%limit != 0 {
 		pagesAmount++
@@ -66,14 +67,14 @@ func (f *Formatter) GetAllUsers(offset, limit int) *models.PageUsers {
 
 	return &models.PageUsers{
 		Users:       users,
-		PageNo:      offset/limit + 1,
+		PageNo:      pageNo,
 		Limit:       limit,
 		PagesAmount: pagesAmount,
 	}
 }
 
-func (f *Formatter) AddUser(user models.UserRequest) (string, error) {
-	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password+f.salt), bcrypt.DefaultCost)
+func (s *Service) AddUser(user models.UserRequest) (string, error) {
+	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password+s.salt), bcrypt.DefaultCost)
 	if err != nil {
 		return "", fmt.Errorf("failed to create user: %w", err)
 	}
@@ -88,51 +89,52 @@ func (f *Formatter) AddUser(user models.UserRequest) (string, error) {
 		Admin:    user.Admin,
 	}
 
-	if err := f.storage.AddUser(dbUser); err != nil {
+	if err := s.storage.AddUser(dbUser); err != nil {
 		return "", fmt.Errorf("failed to create new user: %w", err)
 	}
 
 	return id, nil
 }
 
-func (f *Formatter) GetUserByID(id string) (*models.UserResponse, error) {
-	dbUsers, err := f.storage.GetUserByID(id)
+func (s *Service) GetUserByID(id string) (*models.UserResponse, error) {
+	dbUser, err := s.storage.GetUserByID(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user by id: %w", err)
 	}
 
 	user := models.UserResponse{
-		ID:       dbUsers.ID,
-		Email:    dbUsers.Email,
-		Username: dbUsers.Username,
+		ID:       dbUser.ID,
+		Email:    dbUser.Email,
+		Username: dbUser.Username,
+		Admin:    dbUser.Admin,
 	}
 
 	return &user, nil
 }
 
-func (f *Formatter) ChangeUser(user models.UserRequest) error {
-	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password+f.salt), bcrypt.DefaultCost)
+func (s *Service) ChangeUser(id string, user models.UserRequest) error {
+	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password+s.salt), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("failed to change user: %w", err)
 	}
 
 	dbUser := database.User{
-		ID:       user.ID,
+		ID:       id,
 		Email:    user.Email,
 		Username: user.Username,
 		PassHash: string(hashPass),
 		Admin:    user.Admin,
 	}
 
-	if err := f.storage.ChangeUser(dbUser); err != nil {
+	if err := s.storage.ChangeUser(dbUser); err != nil {
 		return fmt.Errorf("failed to change user: %w", err)
 	}
 
 	return nil
 }
 
-func (f *Formatter) DeleteUser(id string) error {
-	if err := f.storage.DeleteUser(id); err != nil {
+func (s *Service) DeleteUser(id string) error {
+	if err := s.storage.DeleteUser(id); err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
 

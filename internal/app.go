@@ -9,18 +9,18 @@ import (
 	"github.com/KseniiaSalmina/Profiles/internal/api"
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
-	"github.com/KseniiaSalmina/Profiles/internal/formatter"
 	"github.com/KseniiaSalmina/Profiles/internal/logger"
+	"github.com/KseniiaSalmina/Profiles/internal/service"
 	"github.com/sirupsen/logrus"
 )
 
 type Application struct {
-	cfg       config.Application
-	db        *database.Database
-	formatter *formatter.Formatter
-	logger    *logrus.Logger
-	server    *api.Server
-	closeCh   chan os.Signal
+	cfg     config.Application
+	db      *database.Database
+	service *service.Service
+	logger  *logrus.Logger
+	server  *api.Server
+	closeCh chan os.Signal
 }
 
 func NewApplication(cfg config.Application) (*Application, error) {
@@ -42,7 +42,7 @@ func (a *Application) bootstrap() error {
 		return err
 	}
 
-	a.initFormatter()
+	a.initService()
 	if err := a.initLogger(); err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (a *Application) bootstrap() error {
 }
 
 func (a *Application) initDatabase() error {
-	db, err := database.NewDatabase(a.cfg.Database, a.cfg.Formatter.Salt)
+	db, err := database.NewDatabase(a.cfg.Database, a.cfg.Service.Salt)
 	if err != nil {
 		return fmt.Errorf("failed to init database")
 	}
@@ -62,8 +62,8 @@ func (a *Application) initDatabase() error {
 	return nil
 }
 
-func (a *Application) initFormatter() {
-	a.formatter = formatter.NewFormatter(a.cfg.Formatter, a.db)
+func (a *Application) initService() {
+	a.service = service.NewService(a.cfg.Service, a.db)
 }
 
 func (a *Application) initLogger() error {
@@ -78,7 +78,7 @@ func (a *Application) initLogger() error {
 }
 
 func (a *Application) initServer() {
-	a.server = api.NewServer(a.cfg.Server, a.formatter, a.logger)
+	a.server = api.NewServer(a.cfg.Server, a.service, a.logger)
 }
 
 func (a *Application) Run() {

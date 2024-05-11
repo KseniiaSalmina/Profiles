@@ -23,27 +23,27 @@ import (
 // @Failure 401 {string} string
 // @Router /user [get]
 func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
-	var sc int
-	defer s.logging(&sc, r)
+	var statusCode int
+	defer s.logging(&statusCode, r)
 
 	if _, err := s.authorization(r); err != nil {
 		s.logger.WithError(err).Info("get all users handler, failed authorization")
-		sc = http.StatusUnauthorized
+		statusCode = http.StatusUnauthorized
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	limit, pageNo, err := s.getPageInfo(r)
+	pageInfo, err := s.getPageInfo(r)
 	if err != nil {
 		s.logger.WithError(err).Info("get all users handler, failed to get page info")
-		sc = http.StatusBadRequest
+		statusCode = http.StatusBadRequest
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	users := s.storage.GetAllUsers((pageNo-1)*limit, limit)
+	users := s.service.GetAllUsers(pageInfo.Limit, pageInfo.Offset, pageInfo.PageNo)
 
-	sc = http.StatusOK
+	statusCode = http.StatusOK
 	_ = json.NewEncoder(w).Encode(users)
 }
 
@@ -61,20 +61,20 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string
 // @Router /user [post]
 func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
-	var sc int
-	defer s.logging(&sc, r)
+	var statusCode int
+	defer s.logging(&statusCode, r)
 
 	isAdmin, err := s.authorization(r)
 	if err != nil {
 		s.logger.WithError(err).Info("post user handler, failed authorization")
-		sc = http.StatusUnauthorized
+		statusCode = http.StatusUnauthorized
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	if !isAdmin {
 		s.logger.Info("post user handler, user is not admin")
-		sc = http.StatusForbidden
+		statusCode = http.StatusForbidden
 		http.Error(w, validation.ErrIsNotAdmin.Error(), http.StatusForbidden)
 		return
 	}
@@ -82,20 +82,20 @@ func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 	var user models.UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		s.logger.WithError(err).Info("post user handler, failed unmarshall request body")
-		sc = http.StatusInternalServerError
+		statusCode = http.StatusInternalServerError
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	id, err := s.storage.AddUser(user)
+	id, err := s.service.AddUser(user)
 	if err != nil {
 		s.logger.WithError(err).Info("post user handler, failed to add user")
-		sc = http.StatusBadRequest
+		statusCode = http.StatusBadRequest
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	sc = http.StatusOK
+	statusCode = http.StatusOK
 	_ = json.NewEncoder(w).Encode(id)
 }
 
@@ -110,12 +110,12 @@ func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {string} string
 // @Router /user/{id} [get]
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
-	var sc int
-	defer s.logging(&sc, r)
+	var statusCode int
+	defer s.logging(&statusCode, r)
 
 	if _, err := s.authorization(r); err != nil {
 		s.logger.WithError(err).Info("get user handler, failed authorization")
-		sc = http.StatusUnauthorized
+		statusCode = http.StatusUnauthorized
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
@@ -123,28 +123,28 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	id, ok := bunrouter.ParamsFromContext(r.Context()).Get("id")
 	if !ok {
 		s.logger.Info("get user handler, failed to get id")
-		sc = http.StatusBadRequest
+		statusCode = http.StatusBadRequest
 		http.Error(w, "id is required", http.StatusBadRequest)
 		return
 	}
 
 	_, err := uuid.Parse(id)
 	if err != nil {
-		s.logger.WithError(err).Info("get user handler, failed to parce uuid")
-		sc = http.StatusBadRequest
+		s.logger.WithError(err).Info("get user handler, failed to parse uuid")
+		statusCode = http.StatusBadRequest
 		http.Error(w, "id should be in uuid format", http.StatusBadRequest)
 		return
 	}
 
-	user, err := s.storage.GetUserByID(id)
+	user, err := s.service.GetUserByID(id)
 	if err != nil {
 		s.logger.WithError(err).Info("get user handler, failed to get user by id")
-		sc = http.StatusBadRequest
+		statusCode = http.StatusBadRequest
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	sc = http.StatusOK
+	statusCode = http.StatusOK
 	_ = json.NewEncoder(w).Encode(user)
 
 }
@@ -163,20 +163,20 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string
 // @Router /user/{id} [put]
 func (s *Server) putUser(w http.ResponseWriter, r *http.Request) {
-	var sc int
-	defer s.logging(&sc, r)
+	var statusCode int
+	defer s.logging(&statusCode, r)
 
 	isAdmin, err := s.authorization(r)
 	if err != nil {
 		s.logger.WithError(err).Info("put user handler, failed authorization")
-		sc = http.StatusUnauthorized
+		statusCode = http.StatusUnauthorized
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	if !isAdmin {
 		s.logger.Info("put user handler, user is not admin")
-		sc = http.StatusForbidden
+		statusCode = http.StatusForbidden
 		http.Error(w, validation.ErrIsNotAdmin.Error(), http.StatusForbidden)
 		return
 	}
@@ -184,27 +184,35 @@ func (s *Server) putUser(w http.ResponseWriter, r *http.Request) {
 	var user models.UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		s.logger.WithError(err).Info("put user handler, failed to unmarshall request body")
-		sc = http.StatusInternalServerError
+		statusCode = http.StatusInternalServerError
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	_, err = uuid.Parse(user.ID)
+	id, ok := bunrouter.ParamsFromContext(r.Context()).Get("id")
+	if !ok {
+		s.logger.Info("get user handler, failed to get id")
+		statusCode = http.StatusBadRequest
+		http.Error(w, "id is required", http.StatusBadRequest)
+		return
+	}
+
+	_, err = uuid.Parse(id)
 	if err != nil {
-		s.logger.WithError(err).Info("put user handler, failed to parce uuid")
-		sc = http.StatusBadRequest
+		s.logger.WithError(err).Info("put user handler, failed to parse uuid")
+		statusCode = http.StatusBadRequest
 		http.Error(w, "id should be in uuid format", http.StatusBadRequest)
 		return
 	}
 
-	if err := s.storage.ChangeUser(user); err != nil {
+	if err := s.service.ChangeUser(id, user); err != nil {
 		s.logger.WithError(err).Info("put user handler, failed to change user")
-		sc = http.StatusBadRequest
+		statusCode = http.StatusBadRequest
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	sc = http.StatusOK
+	statusCode = http.StatusOK
 	w.WriteHeader(http.StatusOK)
 
 }
@@ -221,20 +229,20 @@ func (s *Server) putUser(w http.ResponseWriter, r *http.Request) {
 // @Failure 403 {string} string
 // @Router /user/{id} [delete]
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
-	var sc int
-	defer s.logging(&sc, r)
+	var statusCode int
+	defer s.logging(&statusCode, r)
 
 	isAdmin, err := s.authorization(r)
 	if err != nil {
 		s.logger.WithError(err).Info("delete user handler, failed authorization")
-		sc = http.StatusUnauthorized
+		statusCode = http.StatusUnauthorized
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	if !isAdmin {
 		s.logger.Info("delete user handler, user is not admin")
-		sc = http.StatusForbidden
+		statusCode = http.StatusForbidden
 		http.Error(w, validation.ErrIsNotAdmin.Error(), http.StatusForbidden)
 		return
 	}
@@ -242,26 +250,26 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	id, ok := bunrouter.ParamsFromContext(r.Context()).Get("id")
 	if !ok {
 		s.logger.Info("delete user handler, failed to get id")
-		sc = http.StatusBadRequest
+		statusCode = http.StatusBadRequest
 		http.Error(w, "id is required", http.StatusBadRequest)
 		return
 	}
 
 	_, err = uuid.Parse(id)
 	if err != nil {
-		s.logger.WithError(err).Info("delete user handler, failed to parce uuid")
-		sc = http.StatusBadRequest
+		s.logger.WithError(err).Info("delete user handler, failed to parse uuid")
+		statusCode = http.StatusBadRequest
 		http.Error(w, "id should be in uuid format", http.StatusBadRequest)
 		return
 	}
 
-	if err := s.storage.DeleteUser(id); err != nil {
+	if err := s.service.DeleteUser(id); err != nil {
 		s.logger.WithError(err).Info("delete user handler, failed to delete user")
-		sc = http.StatusBadRequest
+		statusCode = http.StatusBadRequest
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	sc = http.StatusOK
+	statusCode = http.StatusOK
 	w.WriteHeader(http.StatusOK)
 }

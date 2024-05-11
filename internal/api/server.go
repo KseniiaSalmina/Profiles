@@ -14,24 +14,24 @@ import (
 	"github.com/KseniiaSalmina/Profiles/internal/database"
 )
 
-type Storage interface {
+type Service interface {
 	ReturnSalt() string
 	GetAuthData(username string) (*database.User, error)
-	GetAllUsers(offset, limit int) *models.PageUsers
+	GetAllUsers(limit, offset, pageNo int) *models.PageUsers
 	AddUser(user models.UserRequest) (string, error)
 	GetUserByID(id string) (*models.UserResponse, error)
-	ChangeUser(user models.UserRequest) error
+	ChangeUser(id string, user models.UserRequest) error
 	DeleteUser(id string) error
 }
 
 type Server struct {
 	httpServer *http.Server
-	storage    Storage
+	service    Service
 	logger     *logrus.Logger
 }
 
-func NewServer(cfg config.Server, storage Storage, logger *logrus.Logger) *Server {
-	s := &Server{storage: storage, logger: logger}
+func NewServer(cfg config.Server, service Service, logger *logrus.Logger) *Server {
+	s := &Server{service: service, logger: logger}
 
 	router := bunrouter.New().Compat()
 	router.GET("/user", s.getAllUsers)
@@ -55,7 +55,7 @@ func NewServer(cfg config.Server, storage Storage, logger *logrus.Logger) *Serve
 }
 
 func (s *Server) Run() {
-	s.logger.Info("server started")
+	s.logger.Infof("server started at port %s", s.httpServer.Addr)
 
 	go func() {
 		err := s.httpServer.ListenAndServe()

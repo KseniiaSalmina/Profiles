@@ -15,7 +15,13 @@ var (
 	defaultPage  = 1
 )
 
-func (s *Server) getPageInfo(r *http.Request) (int, int, error) {
+type PageInfo struct {
+	Limit  int
+	Offset int
+	PageNo int
+}
+
+func (s *Server) getPageInfo(r *http.Request) (*PageInfo, error) {
 	var limit int
 	limitStr := r.FormValue("limit")
 	switch limitStr {
@@ -24,12 +30,12 @@ func (s *Server) getPageInfo(r *http.Request) (int, int, error) {
 	default:
 		l, err := strconv.Atoi(limitStr)
 		if err != nil {
-			return 0, 0, fmt.Errorf("failed to get limit: %w", err)
+			return nil, fmt.Errorf("failed to get limit: %w", err)
 		}
 		limit = l
 	}
 	if limit <= 0 {
-		return 0, 0, ErrIncorrectLimit
+		return nil, ErrIncorrectLimit
 	}
 
 	var pageNo int
@@ -40,13 +46,21 @@ func (s *Server) getPageInfo(r *http.Request) (int, int, error) {
 	default:
 		p, err := strconv.Atoi(pageNoStr)
 		if err != nil {
-			return 0, 0, fmt.Errorf("failed to get page number: %w", err)
+			return nil, fmt.Errorf("failed to get page number: %w", err)
 		}
 		pageNo = p
 	}
 	if pageNo <= 0 {
-		return 0, 0, ErrIncorrectPageNo
+		return nil, ErrIncorrectPageNo
 	}
 
-	return limit, pageNo, nil
+	offset := (pageNo - 1) * limit
+
+	page := PageInfo{
+		Limit:  limit,
+		Offset: offset,
+		PageNo: pageNo,
+	}
+
+	return &page, nil
 }

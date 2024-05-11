@@ -12,8 +12,8 @@ import (
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
-	"github.com/KseniiaSalmina/Profiles/internal/formatter"
 	"github.com/KseniiaSalmina/Profiles/internal/logger"
+	"github.com/KseniiaSalmina/Profiles/internal/service"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,7 +30,7 @@ var serverCfg = config.Server{
 	IdleTimeout:  30 * time.Second,
 }
 
-var formatterCfg = config.Formatter{
+var serviceCfg = config.Service{
 	Salt: "",
 }
 
@@ -60,7 +60,7 @@ var testUsers = []database.User{
 }
 
 func prepareDB() *database.Database {
-	db, err := database.NewDatabase(dbCfg, formatterCfg.Salt)
+	db, err := database.NewDatabase(dbCfg, serviceCfg.Salt)
 	if err != nil {
 		log.Fatalf("failed to create db: %s", err.Error())
 	}
@@ -76,14 +76,14 @@ func prepareDB() *database.Database {
 
 func prepareServer() *Server {
 	db := prepareDB()
-	formatter := formatter.NewFormatter(formatterCfg, db)
+	service := service.NewService(serviceCfg, db)
 
 	logger, err := logger.NewLogger(loggercfg)
 	if err != nil {
 		log.Fatal("failed to prepare logger")
 	}
 
-	return NewServer(serverCfg, formatter, logger)
+	return NewServer(serverCfg, service, logger)
 }
 
 func TestServer_getAllUsers(t1 *testing.T) {
@@ -361,7 +361,6 @@ func putUserPrepareReq() []*http.Request {
 	requests := make([]*http.Request, 0, 4)
 
 	user1 := models.UserRequest{
-		ID:       "28ceb514-ea0d-4ca7-a330-9763b8bd7fc4",
 		Email:    "test@gmail.com",
 		Username: "updatedUser1",
 		Password: "super",
@@ -369,7 +368,6 @@ func putUserPrepareReq() []*http.Request {
 	}
 
 	user2 := models.UserRequest{
-		ID:       "28ceb514-ea0d-4ca7-a330-9763b8bd7fc4",
 		Email:    "test22@gmail.com",
 		Username: "updatedUser2",
 		Password: "super2",
@@ -377,7 +375,6 @@ func putUserPrepareReq() []*http.Request {
 	}
 
 	user3 := models.UserRequest{
-		ID:       "1000",
 		Email:    "test3@gmail.com",
 		Username: "updatedUser3",
 		Password: "super3",
@@ -385,7 +382,6 @@ func putUserPrepareReq() []*http.Request {
 	}
 
 	user4 := models.UserRequest{
-		ID:       "34775464-a73b-4445-8866-1e6061c3b70b",
 		Email:    "test4@gmail.com",
 		Username: "updatedUser4",
 		Password: "super4",

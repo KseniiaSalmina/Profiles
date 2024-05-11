@@ -1,5 +1,5 @@
 package config
 
-type Formatter struct {
+type Service struct {
 	Salt string `env:"FMT_SALT" envDefault:"MyUniqueSalt"`
 }
