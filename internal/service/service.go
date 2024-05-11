@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
@@ -10,13 +11,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var ErrNoChanges = errors.New("no changes submitted")
+
 type Storage interface {
 	GetUserByUsername(username string) (*database.User, error)
 	GetAllUsers(offset, limit int) []database.User
 	CountUsers() int
 	AddUser(user database.User) error
 	GetUserByID(id string) (*database.User, error)
-	ChangeUser(user database.User) error
+	ChangeUser(user database.UserUpdate) error
 	DeleteUser(id string) error
 }
 
@@ -73,7 +76,7 @@ func (s *Service) GetAllUsers(limit, offset, pageNo int) *models.PageUsers {
 	}
 }
 
-func (s *Service) AddUser(user models.UserRequest) (string, error) {
+func (s *Service) AddUser(user models.UserAdd) (string, error) {
 	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password+s.salt), bcrypt.DefaultCost)
 	if err != nil {
 		return "", fmt.Errorf("failed to create user: %w", err)
@@ -112,18 +115,25 @@ func (s *Service) GetUserByID(id string) (*models.UserResponse, error) {
 	return &user, nil
 }
 
-func (s *Service) ChangeUser(id string, user models.UserRequest) error {
-	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password+s.salt), bcrypt.DefaultCost)
-	if err != nil {
-		return fmt.Errorf("failed to change user: %w", err)
+func (s *Service) ChangeUser(id string, user models.UserUpdate) error {
+	if user.Email == nil && user.Username == nil && user.Password == nil && user.Admin == nil {
+		return ErrNoChanges
 	}
 
-	dbUser := database.User{
+	dbUser := database.UserUpdate{
 		ID:       id,
 		Email:    user.Email,
 		Username: user.Username,
-		PassHash: string(hashPass),
 		Admin:    user.Admin,
+	}
+
+	if user.Password != nil {
+		hashPass, err := bcrypt.GenerateFromPassword([]byte(*user.Password+s.salt), bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Errorf("failed to change user: %w", err)
+		}
+		newHash := string(hashPass)
+		dbUser.PassHash = &newHash
 	}
 
 	if err := s.storage.ChangeUser(dbUser); err != nil {

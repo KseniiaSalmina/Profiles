@@ -18,9 +18,9 @@ type Service interface {
 	ReturnSalt() string
 	GetAuthData(username string) (*database.User, error)
 	GetAllUsers(limit, offset, pageNo int) *models.PageUsers
-	AddUser(user models.UserRequest) (string, error)
+	AddUser(user models.UserAdd) (string, error)
 	GetUserByID(id string) (*models.UserResponse, error)
-	ChangeUser(id string, user models.UserRequest) error
+	ChangeUser(id string, user models.UserUpdate) error
 	DeleteUser(id string) error
 }
 
@@ -37,7 +37,7 @@ func NewServer(cfg config.Server, service Service, logger *logrus.Logger) *Serve
 	router.GET("/user", s.getAllUsers)
 	router.POST("/user", s.postUser)
 	router.GET("/user/:id", s.getUser)
-	router.PUT("/user/:id", s.putUser)
+	router.PATCH("/user/:id", s.patchUser)
 	router.DELETE("/user/:id", s.deleteUser)
 
 	swagHandler := httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json"))

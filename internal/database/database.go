@@ -117,7 +117,7 @@ func (db *Database) GetUserByUsername(username string) (*User, error) {
 	return user, nil
 }
 
-func (db *Database) ChangeUser(user User) error {
+func (db *Database) ChangeUser(user UserUpdate) error {
 	db.mutex.Lock()
 	defer db.mutex.Unlock()
 
@@ -126,18 +126,44 @@ func (db *Database) ChangeUser(user User) error {
 		return ErrUserDoesNotExist
 	}
 
-	if user.Username != oldUser.Username {
-		if _, ok = db.usernameIDX[user.Username]; ok {
+	if *user.Username != oldUser.Username {
+		if _, ok = db.usernameIDX[*user.Username]; ok {
 			return ErrNotUniqueUsername
 		}
 
 		delete(db.usernameIDX, oldUser.Username)
-		db.usernameIDX[user.Username] = oldUser
+		db.usernameIDX[*user.Username] = oldUser
 	}
 
-	*oldUser = user
+	newUser := db.updateUser(*oldUser, user)
+
+	*oldUser = newUser
 
 	return nil
+}
+
+func (db *Database) updateUser(oldUser User, changes UserUpdate) User {
+	newUser := User{
+		ID: oldUser.ID,
+	}
+
+	if changes.Email != nil {
+		newUser.Email = *changes.Email
+	}
+
+	if changes.Username != nil {
+		newUser.Username = *changes.Username
+	}
+
+	if changes.PassHash != nil {
+		newUser.PassHash = *changes.PassHash
+	}
+
+	if changes.Admin != nil {
+		newUser.Admin = *changes.Admin
+	}
+
+	return newUser
 }
 
 func (db *Database) DeleteUser(id string) error {

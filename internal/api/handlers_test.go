@@ -192,21 +192,21 @@ func TestServer_postUser(t1 *testing.T) {
 func postUserPrepareReq() []*http.Request {
 	requests := make([]*http.Request, 0, 3)
 
-	correctUser1 := models.UserRequest{
+	correctUser1 := models.UserAdd{
 		Email:    "test@gmail.com",
 		Username: "newUser1",
 		Password: "super",
 		Admin:    false,
 	}
 
-	correctUser2 := models.UserRequest{
+	correctUser2 := models.UserAdd{
 		Email:    "test3@gmail.com",
 		Username: "newUser2",
 		Password: "super3",
 		Admin:    false,
 	}
 
-	incorrectUser := models.UserRequest{
+	incorrectUser := models.UserAdd{
 		Email:    "test2@gmail.com",
 		Username: "testUser",
 		Password: "super2",
@@ -326,8 +326,8 @@ func getUserPrepareReq() []*http.Request {
 	return requests
 }
 
-func TestServer_putUser(t1 *testing.T) {
-	requests := putUserPrepareReq()
+func TestServer_patchUser(t1 *testing.T) {
+	requests := patchUserPrepareReq()
 
 	type args struct {
 		w *httptest.ResponseRecorder
@@ -357,31 +357,31 @@ func TestServer_putUser(t1 *testing.T) {
 	}
 }
 
-func putUserPrepareReq() []*http.Request {
+func patchUserPrepareReq() []*http.Request {
 	requests := make([]*http.Request, 0, 4)
 
-	user1 := models.UserRequest{
+	user1 := models.UserAdd{
 		Email:    "test@gmail.com",
 		Username: "updatedUser1",
 		Password: "super",
 		Admin:    false,
 	}
 
-	user2 := models.UserRequest{
+	user2 := models.UserAdd{
 		Email:    "test22@gmail.com",
 		Username: "updatedUser2",
 		Password: "super2",
 		Admin:    false,
 	}
 
-	user3 := models.UserRequest{
+	user3 := models.UserAdd{
 		Email:    "test3@gmail.com",
 		Username: "updatedUser3",
 		Password: "super3",
 		Admin:    false,
 	}
 
-	user4 := models.UserRequest{
+	user4 := models.UserAdd{
 		Email:    "test4@gmail.com",
 		Username: "updatedUser4",
 		Password: "super4",
@@ -393,7 +393,7 @@ func putUserPrepareReq() []*http.Request {
 	if err != nil {
 		log.Fatal("can not marshal correct user 1")
 	}
-	req, err := http.NewRequest("PUT", "/user/28ceb514-ea0d-4ca7-a330-9763b8bd7fc4", strings.NewReader(string(body)))
+	req, err := http.NewRequest("PATCH", "/user/28ceb514-ea0d-4ca7-a330-9763b8bd7fc4", strings.NewReader(string(body)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -405,7 +405,7 @@ func putUserPrepareReq() []*http.Request {
 	if err != nil {
 		log.Fatal("can not marshal correct user 1")
 	}
-	req2, err := http.NewRequest("PUT", "/user/28ceb514-ea0d-4ca7-a330-9763b8bd7fc4", strings.NewReader(string(body)))
+	req2, err := http.NewRequest("PATCH", "/user/28ceb514-ea0d-4ca7-a330-9763b8bd7fc4", strings.NewReader(string(body)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -417,7 +417,7 @@ func putUserPrepareReq() []*http.Request {
 	if err != nil {
 		log.Fatal("can not marshal correct user 1")
 	}
-	req3, err := http.NewRequest("PUT", "/user/1000", strings.NewReader(string(body)))
+	req3, err := http.NewRequest("PATCH", "/user/1000", strings.NewReader(string(body)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -429,7 +429,7 @@ func putUserPrepareReq() []*http.Request {
 	if err != nil {
 		log.Fatal("can not marshal correct user 1")
 	}
-	req4, err := http.NewRequest("PUT", "/user/34775464-a73b-4445-8866-1e6061c3b70b", strings.NewReader(string(body)))
+	req4, err := http.NewRequest("PATCH", "/user/34775464-a73b-4445-8866-1e6061c3b70b", strings.NewReader(string(body)))
 	if err != nil {
 		log.Fatal(err)
 	}

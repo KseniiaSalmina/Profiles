@@ -53,7 +53,7 @@ func (s *Server) getAllUsers(w http.ResponseWriter, r *http.Request) {
 // @Description create new user
 // @Accept json
 // @Return json
-// @Param user body models.UserRequest true "new user's profile"
+// @Param user body models.UserAdd true "new user's profile"
 // @Success 200 {string} string
 // @Failure 400 {string} string
 // @Failure 401 {string} string
@@ -79,7 +79,7 @@ func (s *Server) postUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.UserRequest
+	var user models.UserAdd
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		s.logger.WithError(err).Info("post user handler, failed unmarshall request body")
 		statusCode = http.StatusInternalServerError
@@ -149,20 +149,20 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// @Summary Put user
+// @Summary Patch user
 // @Security BasicAuth
 // @Tags admin
 // @Description update user's profile
 // @Accept json
 // @Param id path string true "user's id in uuid format"
-// @Param user body models.UserRequest true "updated user's profile"
+// @Param user body models.UserUpdate true "at least one update is required"
 // @Success 200
 // @Failure 400 {string} string
 // @Failure 401 {string} string
 // @Failure 403 {string} string
 // @Failure 500 {string} string
-// @Router /user/{id} [put]
-func (s *Server) putUser(w http.ResponseWriter, r *http.Request) {
+// @Router /user/{id} [patch]
+func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 	var statusCode int
 	defer s.logging(&statusCode, r)
 
@@ -181,7 +181,7 @@ func (s *Server) putUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.UserRequest
+	var user models.UserUpdate
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		s.logger.WithError(err).Info("put user handler, failed to unmarshall request body")
 		statusCode = http.StatusInternalServerError

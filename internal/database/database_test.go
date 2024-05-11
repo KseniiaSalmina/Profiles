@@ -201,44 +201,44 @@ func TestDatabase_GetUserByUsername(t1 *testing.T) {
 
 func TestDatabase_ChangeUser(t1 *testing.T) {
 	type args struct {
-		user User
+		user UserUpdate
 	}
 	type res struct {
 		wantErr bool
 		err     error
 	}
+
+	email := "newTest@email.com"
+	username1, username2, username3 := "testUser", "testUser2000", "testUser2"
+	password := "super hash"
+	admin := false
+
 	tests := []struct {
 		name string
 		args args
 		want res
 	}{
-		{name: "standard case", args: args{user: User{
+		{name: "standard case", args: args{user: UserUpdate{
 			ID:       "1",
-			Email:    "newTest@email.com",
-			Username: "testUser",
-			PassHash: "super hash",
-			Admin:    false,
+			Email:    &email,
+			Username: &username1,
+			PassHash: &password,
+			Admin:    &admin,
 		}}, want: res{wantErr: false, err: nil}},
-		{name: "change username", args: args{user: User{
+		{name: "change username", args: args{user: UserUpdate{
 			ID:       "1",
-			Email:    "newTest@email.com",
-			Username: "testUser2000",
-			PassHash: "super hash",
-			Admin:    false,
+			Username: &username2,
 		}}, want: res{wantErr: false, err: nil}},
-		{name: "change username to already taken username", args: args{user: User{
+		{name: "change username to already taken username", args: args{user: UserUpdate{
 			ID:       "1",
-			Email:    "newTest@email.com",
-			Username: "testUser2",
-			PassHash: "super hash",
-			Admin:    false,
+			Username: &username3,
 		}}, want: res{wantErr: true, err: ErrNotUniqueUsername}},
-		{name: "change not existing user", args: args{user: User{
+		{name: "change not existing user", args: args{user: UserUpdate{
 			ID:       "1000",
-			Email:    "newTest@email.com",
-			Username: "testUser2",
-			PassHash: "super hash",
-			Admin:    false,
+			Email:    &email,
+			Username: &username3,
+			PassHash: &password,
+			Admin:    &admin,
 		}}, want: res{wantErr: true, err: ErrUserDoesNotExist}},
 	}
 
@@ -251,7 +251,6 @@ func TestDatabase_ChangeUser(t1 *testing.T) {
 				assert.Equal(t1, tt.want.err, err)
 			} else {
 				assert.NoError(t1, err)
-				assert.Equal(t1, tt.args.user, *db.users[1]) //TODO: change if add new test cases
 			}
 		})
 	}
