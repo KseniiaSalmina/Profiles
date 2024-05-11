@@ -1,7 +1,7 @@
 .SILENT:
 
 build:
-	go mod tidy && go build -o profiles
+	go mod tidy && go build -o ./bin/profiles
 
 run: build
 	./profiles
