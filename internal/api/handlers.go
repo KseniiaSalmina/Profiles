@@ -8,7 +8,7 @@ import (
 	"github.com/uptrace/bunrouter"
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
-	"github.com/KseniiaSalmina/Profiles/internal/api/validation"
+	"github.com/KseniiaSalmina/Profiles/internal/validation"
 )
 
 // @Summary Get all users

@@ -7,9 +7,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
-	"github.com/KseniiaSalmina/Profiles/internal/api/validation"
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
+	"github.com/KseniiaSalmina/Profiles/internal/validation"
 )
 
 type Storage interface {

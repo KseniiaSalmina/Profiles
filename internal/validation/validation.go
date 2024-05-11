@@ -10,7 +10,7 @@ import (
 	"github.com/KseniiaSalmina/Profiles/internal/database"
 )
 
-func AuthData(username, password string, user database.User) error {
+func Auth(username, password string, user database.User) error {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PassHash), []byte(password)); err != nil {
 		return ErrIncorrectAuthData
 	}

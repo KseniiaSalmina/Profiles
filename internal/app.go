@@ -39,11 +39,12 @@ func NewApplication(cfg config.Application) (*Application, error) {
 }
 
 func (a *Application) bootstrap() error {
-	if err := a.initDatabase(); err != nil {
+	a.initDatabase()
+
+	if err := a.initService(); err != nil {
 		return err
 	}
 
-	a.initService()
 	if err := a.initLogger(); err != nil {
 		return err
 	}
@@ -53,24 +54,24 @@ func (a *Application) bootstrap() error {
 	return nil
 }
 
-func (a *Application) initDatabase() error {
-	db, err := database.NewDatabase(a.cfg.Database, a.cfg.Service.Salt)
-	if err != nil {
-		return fmt.Errorf("failed to init database")
-	}
-
-	a.db = db
-	return nil
+func (a *Application) initDatabase() {
+	a.db = database.NewDatabase()
 }
 
-func (a *Application) initService() {
-	a.service = service.NewService(a.cfg.Service, a.db)
+func (a *Application) initService() error {
+	service, err := service.NewService(a.cfg.Service, a.db)
+	if err != nil {
+		return fmt.Errorf("failed to init service: %w", err)
+	}
+
+	a.service = service
+	return nil
 }
 
 func (a *Application) initLogger() error {
 	l, err := logger.NewLogger(a.cfg.Logger)
 	if err != nil {
-		return fmt.Errorf("failed to init logger")
+		return fmt.Errorf("failed to init logger: %w", err)
 	}
 
 	a.logger = l

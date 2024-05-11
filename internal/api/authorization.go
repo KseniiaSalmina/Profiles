@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/KseniiaSalmina/Profiles/internal/api/validation"
+	"github.com/KseniiaSalmina/Profiles/internal/validation"
 )
 
 var ErrNoAuthString = errors.New("authorization required")
@@ -20,7 +20,7 @@ func (s *Server) authorization(r *http.Request) (bool, error) {
 		return false, err
 	}
 
-	if err := validation.AuthData(username, password+s.service.ReturnSalt(), *user); err != nil {
+	if err := validation.Auth(username, password+s.service.ReturnSalt(), *user); err != nil {
 		return false, err
 	}
 
