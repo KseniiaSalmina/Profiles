@@ -7,6 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/KseniiaSalmina/Profiles/internal/api/models"
+	"github.com/KseniiaSalmina/Profiles/internal/api/validation"
 	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/KseniiaSalmina/Profiles/internal/database"
 )
@@ -26,11 +27,28 @@ type Service struct {
 	salt    string
 }
 
-func NewService(cfg config.Service, storage Storage) *Service {
-	return &Service{
+func NewService(cfg config.Service, storage Storage) (*Service, error) {
+	service := Service{
 		storage: storage,
 		salt:    cfg.Salt,
 	}
+
+	firstUser := models.UserAdd{
+		Email:    cfg.AdminEmail,
+		Username: cfg.AdminUsername,
+		Password: cfg.AdminPassword,
+		Admin:    true,
+	}
+
+	if err := validation.UserAdd(firstUser); err != nil {
+		return nil, fmt.Errorf("failed to add firs admin to db: %w", err)
+	}
+
+	if _, err := service.AddUser(firstUser); err != nil {
+		return nil, fmt.Errorf("failed to add firs admin to db: %w", err)
+	}
+
+	return &service, nil
 }
 
 func (s *Service) ReturnSalt() string {

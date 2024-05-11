@@ -1,13 +1,7 @@
 package database
 
 import (
-	"fmt"
 	"sync"
-
-	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
-
-	"github.com/KseniiaSalmina/Profiles/internal/config"
 )
 
 type Database struct {
@@ -17,31 +11,12 @@ type Database struct {
 	usernameIDX map[string]*User
 }
 
-func NewDatabase(cfg config.Database, salt string) (*Database, error) {
-	d := Database{
-		users:       make([]*User, 0, 10),
+func NewDatabase() *Database {
+	return &Database{
+		users:       make([]*User, 0),
 		idIDX:       make(map[string]*User),
 		usernameIDX: make(map[string]*User),
 	}
-
-	hashPass, err := bcrypt.GenerateFromPassword([]byte(cfg.AdminPassword+salt), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create first admin: %w", err)
-	}
-
-	firstUser := User{
-		ID:       uuid.NewString(),
-		Email:    cfg.AdminEmail,
-		Username: cfg.AdminUsername,
-		PassHash: string(hashPass),
-		Admin:    true,
-	}
-
-	if err := d.AddUser(firstUser); err != nil {
-		return nil, fmt.Errorf("failed to first admin: %w", err)
-	}
-
-	return &d, nil
 }
 
 func (db *Database) AddUser(user User) error {
@@ -90,6 +65,9 @@ func (db *Database) GetAllUsers(offset, limit int) []User {
 }
 
 func (db *Database) CountUsers() int {
+	db.mutex.RLock()
+	defer db.mutex.RUnlock()
+
 	return len(db.users)
 }
 
@@ -126,7 +104,7 @@ func (db *Database) ChangeUser(user UserUpdate) error {
 		return ErrUserDoesNotExist
 	}
 
-	if *user.Username != oldUser.Username {
+	if user.Username != nil && *user.Username != oldUser.Username {
 		if _, ok = db.usernameIDX[*user.Username]; ok {
 			return ErrNotUniqueUsername
 		}
@@ -135,35 +113,27 @@ func (db *Database) ChangeUser(user UserUpdate) error {
 		db.usernameIDX[*user.Username] = oldUser
 	}
 
-	newUser := db.updateUser(*oldUser, user)
-
-	*oldUser = newUser
+	db.updateUser(oldUser, user)
 
 	return nil
 }
 
-func (db *Database) updateUser(oldUser User, changes UserUpdate) User {
-	newUser := User{
-		ID: oldUser.ID,
-	}
-
+func (db *Database) updateUser(user *User, changes UserUpdate) {
 	if changes.Email != nil {
-		newUser.Email = *changes.Email
+		user.Email = *changes.Email
 	}
 
 	if changes.Username != nil {
-		newUser.Username = *changes.Username
+		user.Username = *changes.Username
 	}
 
 	if changes.PassHash != nil {
-		newUser.PassHash = *changes.PassHash
+		user.PassHash = *changes.PassHash
 	}
 
 	if changes.Admin != nil {
-		newUser.Admin = *changes.Admin
+		user.Admin = *changes.Admin
 	}
-
-	return newUser
 }
 
 func (db *Database) DeleteUser(id string) error {

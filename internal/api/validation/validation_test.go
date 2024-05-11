@@ -29,11 +29,11 @@ func TestAuthData(t1 *testing.T) {
 		{name: "incorrect password", args: args{username: "username", password: "newPassword", user: database.User{
 			Username: "username",
 			PassHash: "$2a$10$KIsJbN5.Jvtg1rvB4umGu.mbZGfN6..kOyPcEJ4u/GLNU.thjfeyO",
-		}}, want: res{wantErr: true, err: ErrIncorrectUserData}},
+		}}, want: res{wantErr: true, err: ErrIncorrectAuthData}},
 		{name: "incorrect username", args: args{username: "newUsername", password: "password", user: database.User{
 			Username: "username",
 			PassHash: "$2a$10$KIsJbN5.Jvtg1rvB4umGu.mbZGfN6..kOyPcEJ4u/GLNU.thjfeyO",
-		}}, want: res{wantErr: true, err: ErrIncorrectUserData}},
+		}}, want: res{wantErr: true, err: ErrIncorrectAuthData}},
 	}
 
 	for _, tt := range tests {

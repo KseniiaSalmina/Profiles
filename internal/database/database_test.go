@@ -4,15 +4,9 @@ import (
 	"log"
 	"testing"
 
-	"github.com/KseniiaSalmina/Profiles/internal/config"
 	"github.com/stretchr/testify/assert"
 )
 
-var cfg = config.Database{
-	AdminUsername: "test admin",
-	AdminPassword: "test pass",
-	AdminEmail:    "test@email",
-}
 var testUsers = []User{
 	{
 		ID:       "1",
@@ -35,13 +29,11 @@ var testUsers = []User{
 }
 
 func prepareDB(isFull bool) *Database {
-	db, err := NewDatabase(cfg, "test")
-	if err != nil {
-		log.Fatalf("failed to create db: %s", err.Error())
-	}
+	db := NewDatabase()
+
 	if isFull {
 		for _, user := range testUsers {
-			err = db.AddUser(user)
+			err := db.AddUser(user)
 			if err != nil {
 				log.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
 			}
@@ -96,7 +88,7 @@ func TestDatabase_AddUser(t1 *testing.T) {
 				assert.NoError(t1, err)
 				assert.Equal(t1, &tt.args.user, db.idIDX[tt.args.user.ID])
 				assert.Equal(t1, &tt.args.user, db.usernameIDX[tt.args.user.Username])
-				assert.Equal(t1, &tt.args.user, db.users[1]) //TODO: change if add new test cases
+				assert.Equal(t1, &tt.args.user, db.users[0]) //TODO: change if add new test cases
 			}
 			assert.Equal(t1, tt.want.error, err)
 		})
@@ -116,11 +108,11 @@ func TestDatabase_GetAllUsers(t1 *testing.T) {
 		args args
 		want res
 	}{
-		{name: "standard case", args: args{offset: 1, limit: 2}, want: res{testUsers[0:2]}},
-		{name: "only one user in result", args: args{offset: 1, limit: 1}, want: res{testUsers[0:1]}},
+		{name: "standard case", args: args{offset: 0, limit: 2}, want: res{testUsers[0:2]}},
+		{name: "only one user in result", args: args{offset: 1, limit: 1}, want: res{testUsers[1:2]}},
 		{name: "offset more than amount of users in db", args: args{offset: 5, limit: 2}, want: res{[]User{}}},
 		{name: "offset is equal to amount of users in db", args: args{offset: 4, limit: 2}, want: res{[]User{}}},
-		{name: "offset+limit is more than len of slice of users in db", args: args{offset: 1, limit: 5}, want: res{testUsers}},
+		{name: "offset+limit is more than len of slice of users in db", args: args{offset: 0, limit: 5}, want: res{testUsers}},
 	}
 
 	db := prepareDB(true)
@@ -286,7 +278,7 @@ func TestDatabase_DeleteUser(t1 *testing.T) {
 				assert.Equal(t1, false, ok)
 				_, ok = db.usernameIDX["testUser"] //TODO: change if add new test cases
 				assert.Equal(t1, false, ok)
-				assert.NotEqual(t1, testUsers[0], *db.users[1]) //TODO: change if add new test cases
+				assert.NotEqual(t1, testUsers[0], *db.users[0]) //TODO: change if add new test cases
 			}
 		})
 	}

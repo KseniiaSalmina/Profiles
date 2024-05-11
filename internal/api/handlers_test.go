@@ -18,12 +18,6 @@ import (
 	"github.com/KseniiaSalmina/Profiles/internal/service"
 )
 
-var dbCfg = config.Database{
-	AdminUsername: "username",
-	AdminPassword: "password",
-	AdminEmail:    "test@email.com",
-}
-
 var serverCfg = config.Server{
 	Listen:       ":8080",
 	ReadTimeout:  5 * time.Second,
@@ -32,7 +26,10 @@ var serverCfg = config.Server{
 }
 
 var serviceCfg = config.Service{
-	Salt: "",
+	Salt:          "",
+	AdminUsername: "username",
+	AdminPassword: "password",
+	AdminEmail:    "test@email.com",
 }
 
 var loggercfg = config.Logger{
@@ -60,24 +57,14 @@ var testUsers = []database.User{
 		Admin:    false},
 }
 
-func prepareDB() *database.Database {
-	db, err := database.NewDatabase(dbCfg, serviceCfg.Salt)
-	if err != nil {
-		log.Fatalf("failed to create db: %s", err.Error())
-	}
-	for _, user := range testUsers {
-		err = db.AddUser(user)
-		if err != nil {
-			log.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
-		}
-	}
-
-	return db
-}
-
 func prepareServer() *Server {
-	db := prepareDB()
-	service := service.NewService(serviceCfg, db)
+	db := database.NewDatabase()
+	service, err := service.NewService(serviceCfg, db)
+	if err != nil {
+		log.Fatal("failed to prepare service")
+	}
+
+	prepareDB(db)
 
 	logger, err := logger.NewLogger(loggercfg)
 	if err != nil {
@@ -85,6 +72,15 @@ func prepareServer() *Server {
 	}
 
 	return NewServer(serverCfg, service, logger)
+}
+
+func prepareDB(db *database.Database) {
+	for _, user := range testUsers {
+		err := db.AddUser(user)
+		if err != nil {
+			log.Fatalf("failed to add user: %v, %s", user.ID, err.Error())
+		}
+	}
 }
 
 func TestServer_getAllUsers(t1 *testing.T) {
