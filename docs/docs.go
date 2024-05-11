@@ -78,7 +78,7 @@ const docTemplate = `{
                 "summary": "Post user",
                 "parameters": [
                     {
-                        "description": "new user's profile",
+                        "description": "new user's profile, username, password and email is required",
                         "name": "user",
                         "in": "body",
                         "required": true,
