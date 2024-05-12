@@ -4,7 +4,7 @@ build:
 	go mod tidy && go build -o ./bin/profiles
 
 run: build
-	./profiles
+	./bin/profiles
 
 test:
 	go test ./internal/api... ./internal/database... ./internal/validation/...
